@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Asset Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 0 16px; color: #222; }
+        h1 { color: #c0392b; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        label { display: block; margin: 10px 0 4px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { margin-top: 16px; background: #c0392b; color: #fff; border: none; padding: 10px 18px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+        button:hover { background: #a93226; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+        th { background: #f5f5f5; }
+        .del { background: #777; padding: 4px 10px; font-size: 13px; }
+        .del:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <h1>📸 Digital Asset Management</h1>
+
+    <div class="card">
+        <h2>Add an Asset</h2>
+        <label>Name</label>
+        <input id="name" placeholder="e.g. Summer Lookbook 2026">
+
+        <label>Type</label>
+        <select id="type">
+            <option value="image">image</option>
+            <option value="video">video</option>
+        </select>
+
+        <label>URL (file location)</label>
+        <input id="url" placeholder="e.g. /files/look1.jpg">
+
+        <label>Uploaded At</label>
+        <input id="uploadedAt" placeholder="e.g. 2026-06-16T10:30">
+
+        <button onclick="addAsset()">➕ Add Asset</button>
+    </div>
+
+    <div class="card">
+        <h2>All Assets</h2>
+        <table id="assetTable">
+            <thead>
+                <tr><th>ID</th><th>Name</th><th>Type</th><th>URL</th><th>Uploaded At</th><th></th></tr>
+            </thead>
+            <tbody id="assetBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // load all assets and show them in the table
+        async function loadAssets() {
+            const res = await fetch('/assets');
+            const assets = await res.json();
+            const body = document.getElementById('assetBody');
+            body.innerHTML = '';
+            assets.forEach(a => {
+                body.innerHTML += `<tr>
+                    <td>${a.id}</td>
+                    <td>${a.name}</td>
+                    <td>${a.type}</td>
+                    <td>${a.url}</td>
+                    <td>${a.uploadedAt}</td>
+                    <td><button class="del" onclick="deleteAsset(${a.id})">Delete</button></td>
+                </tr>`;
+            });
+        }
+
+        // send a new asset to the backend (POST /assets)
+        async function addAsset() {
+            const asset = {
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                url: document.getElementById('url').value,
+                uploadedAt: document.getElementById('uploadedAt').value
+            };
+            await fetch('/assets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(asset)
+            });
+            // clear the form + refresh the list
+            document.getElementById('name').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('uploadedAt').value = '';
+            loadAssets();
+        }
+
+        // delete an asset (DELETE /assets/{id})
+        async function deleteAsset(id) {
+            await fetch('/assets/' + id, { method: 'DELETE' });
+            loadAssets();
+        }
+
+        // load assets when the page opens
+        loadAssets();
+    </script>
+</body>
+</html>
